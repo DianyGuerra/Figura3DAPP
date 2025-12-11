@@ -1,0 +1,21 @@
+# Carpetas generadas por Visual Studio
+bin/
+obj/
+.vs/
+
+# Archivos temporales
+*.user
+*.suo
+*.tmp
+*.log
+
+# Build results
+*.exe
+*.dll
+*.pdb
+
+# Paquetes NuGet descargados
+packages/
+
+# Configuración de VS Code (si existiera)
+.vscode/
