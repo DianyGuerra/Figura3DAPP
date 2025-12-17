@@ -46,44 +46,74 @@ namespace Motor3D
         {
             var esfera = new Figura3D { Nombre = "Esfera", Color = Color.Red };
 
-            // Método simplificado: latitud-longitud
-            int latitudes = 16;
-            int longitudes = 24;
+            int stacks = Math.Max(6, subdivisiones * 8);
+            int slices = stacks * 2;
 
-            for (int lat = 0; lat <= latitudes; lat++)
+            // Polo norte
+            esfera.Vertices.Add(new Vector3D(0, radio, 0));
+            int idxTop = 0;
+
+            // Anillos (sin polos)
+            for (int i = 1; i < stacks; i++)
             {
-                float theta = lat * (float)Math.PI / latitudes;
-                float sinTheta = (float)Math.Sin(theta);
-                float cosTheta = (float)Math.Cos(theta);
+                float theta = (float)Math.PI * i / stacks;      // 0..PI
+                float y = radio * (float)Math.Cos(theta);
+                float r = radio * (float)Math.Sin(theta);
 
-                for (int lon = 0; lon <= longitudes; lon++)
+                for (int j = 0; j < slices; j++)
                 {
-                    float phi = lon * 2 * (float)Math.PI / longitudes;
-                    float sinPhi = (float)Math.Sin(phi);
-                    float cosPhi = (float)Math.Cos(phi);
-
-                    float x = radio * cosPhi * sinTheta;
-                    float y = radio * cosTheta;
-                    float z = radio * sinPhi * sinTheta;
-
+                    float phi = 2f * (float)Math.PI * j / slices; // 0..2PI
+                    float x = r * (float)Math.Cos(phi);
+                    float z = r * (float)Math.Sin(phi);
                     esfera.Vertices.Add(new Vector3D(x, y, z));
                 }
             }
 
-            // Crear caras
-            for (int lat = 0; lat < latitudes; lat++)
-            {
-                for (int lon = 0; lon < longitudes; lon++)
-                {
-                    int actual = lat * (longitudes + 1) + lon;
-                    int siguiente = actual + longitudes + 1;
+            // Polo sur
+            esfera.Vertices.Add(new Vector3D(0, -radio, 0));
+            int idxBottom = esfera.Vertices.Count - 1;
 
-                    esfera.Caras.Add(new int[] { actual, siguiente, siguiente + 1, actual + 1 });
+            int RingStart(int ring) => 1 + (ring * slices); // ring 0 = primer anillo (i=1)
+
+            // Tapas (triángulos)
+            // Norte: top -> ring0[j] -> ring0[j+1]
+            for (int j = 0; j < slices; j++)
+            {
+                int a = idxTop;
+                int b = RingStart(0) + j;
+                int c = RingStart(0) + (j + 1) % slices;
+                esfera.Caras.Add(new[] { a, b, c });
+            }
+
+            // Cuerpo (quads)
+            for (int ring = 0; ring < stacks - 2; ring++)
+            {
+                int r0 = RingStart(ring);
+                int r1 = RingStart(ring + 1);
+
+                for (int j = 0; j < slices; j++)
+                {
+                    int a = r0 + j;
+                    int b = r1 + j;
+                    int c = r1 + (j + 1) % slices;
+                    int d = r0 + (j + 1) % slices;
+                    esfera.Caras.Add(new[] { a, b, c, d });
                 }
+            }
+
+            // Sur: bottom -> lastRing[j+1] -> lastRing[j]
+            int lastRingStart = RingStart(stacks - 2);
+            for (int j = 0; j < slices; j++)
+            {
+                int a = idxBottom;
+                int b = lastRingStart + (j + 1) % slices;
+                int c = lastRingStart + j;
+                esfera.Caras.Add(new[] { a, b, c });
             }
 
             return esfera;
         }
+
 
         /// <summary>
         /// Crea un cilindro con tapas.

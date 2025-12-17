@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Text;
 using System.Linq;
 using System.Windows.Forms;
 using static Motor3D.Motor3DCore;
@@ -32,10 +33,37 @@ namespace Motor3D
         // Timer para animación/actualización
         private Timer timerActualizacion;
 
+        private Timer timerRender;
+        private bool necesitaRender = true;
+
+        private readonly Dictionary<int, SolidBrush> _brushCache = new Dictionary<int, SolidBrush>();
+        private readonly Dictionary<int, Pen> _penCache = new Dictionary<int, Pen>();
+
+        private readonly PointF[] _tmp3 = new PointF[3];
+        private readonly PointF[] _tmp4 = new PointF[4];
+
+
+        private struct FaceKey
+        {
+            public int Index;
+            public float Depth;
+        }
+
+
         public Form3DViewer()
         {
             InitializeComponent();
             InicializarSistema3D();
+
+            typeof(PictureBox).InvokeMember(
+            "DoubleBuffered",
+            System.Reflection.BindingFlags.SetProperty
+            | System.Reflection.BindingFlags.Instance
+            | System.Reflection.BindingFlags.NonPublic,
+            null,
+            pictureBoxViewport,
+            new object[] { true }
+        );
         }
 
         /// <summary>
@@ -46,6 +74,12 @@ namespace Motor3D
             try
             {
                 // Configurar viewport
+                pictureBoxViewport.Paint -= pictureBoxViewport_Paint;
+                pictureBoxViewport.Paint += pictureBoxViewport_Paint;
+                pictureBoxViewport.Resize += (s, e) => RecrearBuffer();
+
+                pictureBoxViewport.BackColor = Color.FromArgb(20, 20, 30);
+
                 if (pictureBoxViewport.Width > 0 && pictureBoxViewport.Height > 0)
                 {
                     bufferRenderizado = new Bitmap(pictureBoxViewport.Width, pictureBoxViewport.Height);
@@ -65,17 +99,29 @@ namespace Motor3D
                 AgregarFiguraInicial();
 
                 // Configurar timer de actualización
-                timerActualizacion = new Timer();
+                timerRender = new Timer();
+                timerRender.Interval = 16; // 60fps máx
+                timerRender.Tick += (s, e) =>
+                {
+                    if (!necesitaRender) return;
+                    necesitaRender = false;
+                    RenderizarEscena();
+                };
+                timerRender.Start();
+
+
+                /*timerActualizacion = new Timer();
                 timerActualizacion.Interval = 16; // ~60 FPS
                 timerActualizacion.Tick += TimerActualizacion_Tick;
-                timerActualizacion.Start();
+                timerActualizacion.Start();*/
+
 
                 // Actualizar UI
                 ActualizarListaFiguras();
                 ActualizarInfoCamara();
 
                 // Renderizado inicial
-                RenderizarEscena();
+                SolicitarRender();
             }
             catch (Exception ex)
             {
@@ -83,6 +129,9 @@ namespace Motor3D
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        private void SolicitarRender() => necesitaRender = true;
+
 
         /// <summary>
         /// Agrega una figura inicial a la escena.
@@ -117,7 +166,7 @@ namespace Motor3D
                 SeleccionarFigura(0);
             }
 
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         /// <summary>
@@ -141,7 +190,7 @@ namespace Motor3D
                 DeshabilitarControlesTransformacion();
             }
 
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         /// <summary>
@@ -155,7 +204,7 @@ namespace Motor3D
             listBoxFiguras.SelectedIndex = indice;
 
             ActualizarControlesTransformacion();
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         /// <summary>
@@ -269,7 +318,8 @@ namespace Motor3D
                 }
 
                 // Copiar buffer a pantalla
-                pictureBoxViewport.Image = (Bitmap)bufferRenderizado.Clone();
+                pictureBoxViewport.Invalidate();
+
             }
             catch (Exception ex)
             {
@@ -283,68 +333,111 @@ namespace Motor3D
         private void DibujarFigura(Figura3D figura, Matrix4x4 matrizVista, Matrix4x4 matrizProyeccion)
         {
             var matrizModelo = figura.ObtenerMatrizTransformacion();
-            var matrizCompleta = matrizProyeccion * matrizVista * matrizModelo;
+            var matrizModelView = matrizVista * matrizModelo;
 
-            // Transformar vértices
-            var verticesTransformados = figura.Vertices
-                .Select(v => matrizCompleta.TransformarPunto(v))
-                .ToList();
+            int n = figura.Vertices.Count;
+            if (n <= 0) return;
 
-            // Ordenar caras por profundidad (Painter's algorithm)
-            var carasOrdenadas = figura.Caras
-                .Select(cara => new
-                {
-                    Cara = cara,
-                    Profundidad = cara.Take(3).Average(i => verticesTransformados[i].Z)
-                })
-                .OrderByDescending(x => x.Profundidad)
-                .Select(x => x.Cara);
+            // Arrays reutilizables por llamada (evitamos LINQ, pero sin ArrayPool)
+            var vView = new Vector3D[n];
+            var vClip = new Vector3D[n];
 
-            // Dibujar cada cara
-            foreach (var cara in carasOrdenadas)
+            // 1) Transformar a VIEW
+            for (int i = 0; i < n; i++)
+                vView[i] = matrizModelView.TransformarPunto(figura.Vertices[i]);
+
+            // 2) Proyectar a CLIP
+            for (int i = 0; i < n; i++)
+                vClip[i] = matrizProyeccion.TransformarPunto(vView[i]);
+
+            // 3) Ordenar caras por profundidad (Painter)
+            int faceCount = figura.Caras.Count;
+            var keys = new FaceKey[faceCount];
+
+            for (int fi = 0; fi < faceCount; fi++)
             {
-                // Back-face culling
-                var normal = figura.CalcularNormal(cara);
-                var normalTransformada = matrizVista.TransformarPunto(normal);
+                var cara = figura.Caras[fi];
+                float d = vView[cara[0]].Z + vView[cara[1]].Z + vView[cara[2]].Z;
+                keys[fi] = new FaceKey { Index = fi, Depth = d / 3f };
+            }
 
-                if (normalTransformada.Z <= 0) continue; // No dibujar caras traseras
+            Array.Sort(keys, (a, b) => a.Depth.CompareTo(b.Depth));
 
-                // Calcular color con iluminación
+            // 4) Dibujar caras
+            for (int k = 0; k < faceCount; k++)
+            {
+                var cara = figura.Caras[keys[k].Index];
+                int m = cara.Length;
+                if (m < 3) continue;
+
+                // Normal en VIEW (culling)
+                var a = vView[cara[0]];
+                var b = vView[cara[1]];
+                var c = vView[cara[2]];
+                var normalView = Vector3D.ProductoCruz(b - a, c - a).Normalizar();
+                if (normalView.Z <= 0) continue;
+
                 Color colorFinal = figura.Color;
+
                 if (iluminacionActiva)
                 {
-                    colorFinal = CalcularIluminacion(normal, direccionLuz, figura.Color, 0.8f);
+                    // Normal en WORLD (como antes)
+                    var aw = matrizModelo.TransformarPunto(figura.Vertices[cara[0]]);
+                    var bw = matrizModelo.TransformarPunto(figura.Vertices[cara[1]]);
+                    var cw = matrizModelo.TransformarPunto(figura.Vertices[cara[2]]);
+                    var normalWorld = Vector3D.ProductoCruz(bw - aw, cw - aw).Normalizar();
+
+                    colorFinal = CalcularIluminacion(normalWorld, direccionLuz, figura.Color, 0.8f);
                 }
 
-                // Convertir a coordenadas de pantalla
-                var puntos2D = cara
-                    .Select(i => A2D(verticesTransformados[i], pictureBoxViewport.Width, pictureBoxViewport.Height))
-                    .ToArray();
-
-                // Dibujar cara
-                if (modoWireframe)
+                if (m == 3)
                 {
-                    using (Pen pen = new Pen(colorFinal, 1))
+                    _tmp3[0] = A2D(vClip[cara[0]], pictureBoxViewport.Width, pictureBoxViewport.Height);
+                    _tmp3[1] = A2D(vClip[cara[1]], pictureBoxViewport.Width, pictureBoxViewport.Height);
+                    _tmp3[2] = A2D(vClip[cara[2]], pictureBoxViewport.Width, pictureBoxViewport.Height);
+
+                    if (modoWireframe)
                     {
-                        for (int i = 0; i < puntos2D.Length; i++)
-                        {
-                            var p1 = puntos2D[i];
-                            var p2 = puntos2D[(i + 1) % puntos2D.Length];
-                            graphicsBuffer.DrawLine(pen, p1, p2);
-                        }
+                        var pen = GetPen(colorFinal, 1f);
+                        graphicsBuffer.DrawPolygon(pen, _tmp3);
+                    }
+                    else
+                    {
+                        var brush = GetBrush(colorFinal);
+                        var pen = GetPen(Color.FromArgb(100, colorFinal), 1f);
+                        graphicsBuffer.FillPolygon(brush, _tmp3);
+                        graphicsBuffer.DrawPolygon(pen, _tmp3);
+                    }
+                }
+                else if (m == 4)
+                {
+                    _tmp4[0] = A2D(vClip[cara[0]], pictureBoxViewport.Width, pictureBoxViewport.Height);
+                    _tmp4[1] = A2D(vClip[cara[1]], pictureBoxViewport.Width, pictureBoxViewport.Height);
+                    _tmp4[2] = A2D(vClip[cara[2]], pictureBoxViewport.Width, pictureBoxViewport.Height);
+                    _tmp4[3] = A2D(vClip[cara[3]], pictureBoxViewport.Width, pictureBoxViewport.Height);
+
+                    if (modoWireframe)
+                    {
+                        var pen = GetPen(colorFinal, 1f);
+                        graphicsBuffer.DrawPolygon(pen, _tmp4);
+                    }
+                    else
+                    {
+                        var brush = GetBrush(colorFinal);
+                        var pen = GetPen(Color.FromArgb(100, colorFinal), 1f);
+                        graphicsBuffer.FillPolygon(brush, _tmp4);
+                        graphicsBuffer.DrawPolygon(pen, _tmp4);
                     }
                 }
                 else
                 {
-                    using (Brush brush = new SolidBrush(colorFinal))
-                    using (Pen pen = new Pen(Color.FromArgb(100, colorFinal), 1))
-                    {
-                        graphicsBuffer.FillPolygon(brush, puntos2D);
-                        graphicsBuffer.DrawPolygon(pen, puntos2D);
-                    }
+                    // Si alguna cara tiene >4 vértices, la omitimos (o habría que triangular)
+                    continue;
                 }
             }
         }
+
+
 
         /// <summary>
         /// Dibuja una caja delimitadora alrededor de la figura seleccionada.
@@ -441,6 +534,49 @@ namespace Motor3D
             }
         }
 
+        /// <summary>
+        /// Método para recrear el buffer de renderizado al cambiar el tamaño del viewport.
+        /// </summary>
+        private void RecrearBuffer()
+        {
+            graphicsBuffer?.Dispose();
+            bufferRenderizado?.Dispose();
+
+            if (pictureBoxViewport.Width <= 0 || pictureBoxViewport.Height <= 0) return;
+
+            bufferRenderizado = new Bitmap(pictureBoxViewport.Width, pictureBoxViewport.Height);
+            graphicsBuffer = Graphics.FromImage(bufferRenderizado);
+            graphicsBuffer.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            SolicitarRender();
+        }
+
+
+        private SolidBrush GetBrush(Color c)
+        {
+            int key = c.ToArgb();
+            SolidBrush b;
+            if (!_brushCache.TryGetValue(key, out b))
+            {
+                b = new SolidBrush(c);
+                _brushCache[key] = b;
+            }
+            return b;
+        }
+
+        private Pen GetPen(Color c, float w)
+        {
+            int key = (c.ToArgb() * 397) ^ w.GetHashCode();
+            Pen p;
+            if (!_penCache.TryGetValue(key, out p))
+            {
+                p = new Pen(c, w);
+                _penCache[key] = p;
+            }
+            return p;
+        }
+
+
         // EVENTOS DE UI
 
         private void listBoxFiguras_SelectedIndexChanged(object sender, EventArgs e)
@@ -476,7 +612,7 @@ namespace Motor3D
                 {
                     figuraSeleccionada.Color = dlg.Color;
                     btnColor.BackColor = dlg.Color;
-                    RenderizarEscena();
+                    SolicitarRender();
                 }
             }
         }
@@ -486,21 +622,21 @@ namespace Motor3D
         {
             if (figuraSeleccionada == null) return;
             figuraSeleccionada.Posicion = new Vector3D((float)numericPosX.Value, figuraSeleccionada.Posicion.Y, figuraSeleccionada.Posicion.Z);
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         private void numericPosY_ValueChanged(object sender, EventArgs e)
         {
             if (figuraSeleccionada == null) return;
             figuraSeleccionada.Posicion = new Vector3D(figuraSeleccionada.Posicion.X, (float)numericPosY.Value, figuraSeleccionada.Posicion.Z);
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         private void numericPosZ_ValueChanged(object sender, EventArgs e)
         {
             if (figuraSeleccionada == null) return;
             figuraSeleccionada.Posicion = new Vector3D(figuraSeleccionada.Posicion.X, figuraSeleccionada.Posicion.Y, (float)numericPosZ.Value);
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         private void trackBarRotX_Scroll(object sender, EventArgs e)
@@ -508,7 +644,7 @@ namespace Motor3D
             if (figuraSeleccionada == null) return;
             figuraSeleccionada.Rotacion = new Vector3D(trackBarRotX.Value, figuraSeleccionada.Rotacion.Y, figuraSeleccionada.Rotacion.Z);
             lblRotX.Text = $"X: {trackBarRotX.Value}°";
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         private void trackBarRotY_Scroll(object sender, EventArgs e)
@@ -516,7 +652,7 @@ namespace Motor3D
             if (figuraSeleccionada == null) return;
             figuraSeleccionada.Rotacion = new Vector3D(figuraSeleccionada.Rotacion.X, trackBarRotY.Value, figuraSeleccionada.Rotacion.Z);
             lblRotY.Text = $"Y: {trackBarRotY.Value}°";
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         private void trackBarRotZ_Scroll(object sender, EventArgs e)
@@ -524,36 +660,53 @@ namespace Motor3D
             if (figuraSeleccionada == null) return;
             figuraSeleccionada.Rotacion = new Vector3D(figuraSeleccionada.Rotacion.X, figuraSeleccionada.Rotacion.Y, trackBarRotZ.Value);
             lblRotZ.Text = $"Z: {trackBarRotZ.Value}°";
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         private void numericEscalaX_ValueChanged(object sender, EventArgs e)
         {
             if (figuraSeleccionada == null) return;
             figuraSeleccionada.Escala = new Vector3D((float)numericEscalaX.Value, figuraSeleccionada.Escala.Y, figuraSeleccionada.Escala.Z);
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         private void numericEscalaY_ValueChanged(object sender, EventArgs e)
         {
             if (figuraSeleccionada == null) return;
             figuraSeleccionada.Escala = new Vector3D(figuraSeleccionada.Escala.X, (float)numericEscalaY.Value, figuraSeleccionada.Escala.Z);
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         private void numericEscalaZ_ValueChanged(object sender, EventArgs e)
         {
             if (figuraSeleccionada == null) return;
             figuraSeleccionada.Escala = new Vector3D(figuraSeleccionada.Escala.X, figuraSeleccionada.Escala.Y, (float)numericEscalaZ.Value);
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         // Eventos de mouse
         private void pictureBoxViewport_MouseDown(object sender, MouseEventArgs e)
         {
             ultimoMousePos = e.Location;
-            arrastrando = true;
+
+            if (e.Button == MouseButtons.Left)
+            {
+                arrastrando = true;
+
+                // Más fluido mientras arrastras
+                if (graphicsBuffer != null)
+                    graphicsBuffer.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
+
+                // Opcional: fuerza wireframe temporal mientras arrastras (si quieres aún más fluido)
+                // modoWireframe = true;
+
+                // Para que el PictureBox reciba la rueda/teclas y no "pierda" el focus
+                pictureBoxViewport.Focus();
+
+                SolicitarRender();
+            }
         }
+
 
         private void pictureBoxViewport_MouseMove(object sender, MouseEventArgs e)
         {
@@ -561,27 +714,43 @@ namespace Motor3D
 
             float deltaX = e.X - ultimoMousePos.X;
             float deltaY = e.Y - ultimoMousePos.Y;
+            ultimoMousePos = e.Location;
+
+            if (camara == null) return;
 
             if (camara.Modo == Camara3D.ModoCamara.Orbital)
             {
                 camara.RotarOrbital(deltaX * 0.5f, deltaY * 0.5f);
-                RenderizarEscena();
+                SolicitarRender();
             }
-
-            ultimoMousePos = e.Location;
+            else if (camara.Modo == Camara3D.ModoCamara.Libre)
+            {
+                SolicitarRender();
+            }
         }
+
 
         private void pictureBoxViewport_MouseUp(object sender, MouseEventArgs e)
         {
-            arrastrando = false;
+            if (e.Button == MouseButtons.Left)
+            {
+                arrastrando = false;
+
+                // Restaurar calidad al soltar
+                if (graphicsBuffer != null)
+                    graphicsBuffer.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                SolicitarRender();
+            }
         }
+
 
         private void pictureBoxViewport_MouseWheel(object sender, MouseEventArgs e)
         {
             if (camara.Modo == Camara3D.ModoCamara.Orbital)
             {
                 camara.Zoom(-e.Delta * 0.001f);
-                RenderizarEscena();
+                SolicitarRender();
             }
         }
 
@@ -590,47 +759,47 @@ namespace Motor3D
         {
             camara.CambiarModo(Camara3D.ModoCamara.Orbital);
             ActualizarInfoCamara();
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         private void btnCamaraLibre_Click(object sender, EventArgs e)
         {
             camara.CambiarModo(Camara3D.ModoCamara.Libre);
             ActualizarInfoCamara();
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         private void btnCamaraFija_Click(object sender, EventArgs e)
         {
             camara.CambiarModo(Camara3D.ModoCamara.Fija);
             ActualizarInfoCamara();
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         private void btnReiniciarCamara_Click(object sender, EventArgs e)
         {
             camara.Reiniciar();
             ActualizarInfoCamara();
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         // Opciones de visualización
         private void checkBoxIluminacion_CheckedChanged(object sender, EventArgs e)
         {
             iluminacionActiva = checkBoxIluminacion.Checked;
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         private void checkBoxGrid_CheckedChanged(object sender, EventArgs e)
         {
             mostrarGrid = checkBoxGrid.Checked;
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         private void checkBoxWireframe_CheckedChanged(object sender, EventArgs e)
         {
             modoWireframe = checkBoxWireframe.Checked;
-            RenderizarEscena();
+            SolicitarRender();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -650,8 +819,22 @@ namespace Motor3D
             {
                 bufferRenderizado.Dispose();
             }
+            timerRender?.Stop();
+            timerRender?.Dispose();
+            foreach (var b in _brushCache.Values) b.Dispose();
+            foreach (var p in _penCache.Values) p.Dispose();
+            _brushCache.Clear();
+            _penCache.Clear();
+
 
             base.OnFormClosing(e);
         }
+
+        private void pictureBoxViewport_Paint(object sender, PaintEventArgs e)
+        {
+            if (bufferRenderizado != null)
+                e.Graphics.DrawImageUnscaled(bufferRenderizado, 0, 0);
+        }
+
     }
 }

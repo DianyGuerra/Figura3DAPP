@@ -192,10 +192,10 @@ namespace Motor3D
                 case "Cono":
                     FiguraCreada = Figuras3DFactory.CrearCono(tamaño / 2, tamaño, 16);
                     break;
-                /*case "Toroide":
-                    FiguraCreada = Figuras3DFactory.CrearToroide(tamaño, tamaño / 3, 16, 16);
+                case "Toroide":
+                    FiguraCreada = Figuras3DFactory.CrearToro(tamaño, tamaño / 3f, 16, 12);
                     break;
-                case "Plano":
+                /*case "Plano":
                     FiguraCreada = Figuras3DFactory.CrearPlano(tamaño, tamaño, 4, 4);
                     break;*/
                 default:
