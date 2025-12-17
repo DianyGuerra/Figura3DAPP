@@ -69,20 +69,6 @@ La aplicación debe contar con una GUI que permita:
 
 ---
 
-## 📦 Entregables del Proyecto
+# Link de GitHub
 
-- **Informe técnico** que incluya:
-  - Algoritmos utilizados  
-  - Transformaciones implementadas  
-  - Estructura del sistema  
-  - Reflexión sobre decisiones de diseño  
-
-- **Repositorio GitHub** con el código fuente completo  
-- **Archivo proyecto.zip** con todos los recursos necesarios  
-- **Presentación final**  
-- **Capturas de pantalla o video demostrativo** de la herramienta funcionando  
-
----
-
-## 📁 Estructura sugerida del proyecto
-
+https://github.com/DianyGuerra/Figura3DAPP.git
