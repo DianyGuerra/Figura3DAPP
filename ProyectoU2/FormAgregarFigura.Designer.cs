@@ -50,11 +50,10 @@
             "Pirámide",
             "Cilindro",
             "Cono",
-            "Toroide",
-            "Plano"});
-            this.comboBoxTipo.Location = new System.Drawing.Point(20, 45);
+            "Toroide"});
+            this.comboBoxTipo.Location = new System.Drawing.Point(17, 39);
             this.comboBoxTipo.Name = "comboBoxTipo";
-            this.comboBoxTipo.Size = new System.Drawing.Size(200, 23);
+            this.comboBoxTipo.Size = new System.Drawing.Size(172, 21);
             this.comboBoxTipo.TabIndex = 0;
             this.comboBoxTipo.SelectedIndexChanged += new System.EventHandler(this.comboBoxTipo_SelectedIndexChanged);
             // 
@@ -68,7 +67,7 @@
             0,
             0,
             65536});
-            this.numericTamaño.Location = new System.Drawing.Point(20, 110);
+            this.numericTamaño.Location = new System.Drawing.Point(17, 95);
             this.numericTamaño.Maximum = new decimal(new int[] {
             10,
             0,
@@ -80,7 +79,7 @@
             0,
             65536});
             this.numericTamaño.Name = "numericTamaño";
-            this.numericTamaño.Size = new System.Drawing.Size(200, 23);
+            this.numericTamaño.Size = new System.Drawing.Size(171, 20);
             this.numericTamaño.TabIndex = 1;
             this.numericTamaño.Value = new decimal(new int[] {
             15,
@@ -93,9 +92,9 @@
             this.btnAceptar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
             this.btnAceptar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAceptar.ForeColor = System.Drawing.Color.White;
-            this.btnAceptar.Location = new System.Drawing.Point(20, 240);
+            this.btnAceptar.Location = new System.Drawing.Point(17, 208);
             this.btnAceptar.Name = "btnAceptar";
-            this.btnAceptar.Size = new System.Drawing.Size(100, 35);
+            this.btnAceptar.Size = new System.Drawing.Size(86, 30);
             this.btnAceptar.TabIndex = 2;
             this.btnAceptar.Text = "Aceptar";
             this.btnAceptar.UseVisualStyleBackColor = false;
@@ -107,9 +106,9 @@
             this.btnCancelar.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancelar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCancelar.ForeColor = System.Drawing.Color.White;
-            this.btnCancelar.Location = new System.Drawing.Point(130, 240);
+            this.btnCancelar.Location = new System.Drawing.Point(111, 208);
             this.btnCancelar.Name = "btnCancelar";
-            this.btnCancelar.Size = new System.Drawing.Size(100, 35);
+            this.btnCancelar.Size = new System.Drawing.Size(86, 30);
             this.btnCancelar.TabIndex = 3;
             this.btnCancelar.Text = "Cancelar";
             this.btnCancelar.UseVisualStyleBackColor = false;
@@ -118,9 +117,9 @@
             // 
             this.lblTipo.AutoSize = true;
             this.lblTipo.ForeColor = System.Drawing.Color.White;
-            this.lblTipo.Location = new System.Drawing.Point(20, 20);
+            this.lblTipo.Location = new System.Drawing.Point(17, 17);
             this.lblTipo.Name = "lblTipo";
-            this.lblTipo.Size = new System.Drawing.Size(96, 15);
+            this.lblTipo.Size = new System.Drawing.Size(78, 13);
             this.lblTipo.TabIndex = 4;
             this.lblTipo.Text = "Tipo de Figura:";
             // 
@@ -128,9 +127,9 @@
             // 
             this.lblTamaño.AutoSize = true;
             this.lblTamaño.ForeColor = System.Drawing.Color.White;
-            this.lblTamaño.Location = new System.Drawing.Point(20, 85);
+            this.lblTamaño.Location = new System.Drawing.Point(17, 74);
             this.lblTamaño.Name = "lblTamaño";
-            this.lblTamaño.Size = new System.Drawing.Size(55, 15);
+            this.lblTamaño.Size = new System.Drawing.Size(49, 13);
             this.lblTamaño.TabIndex = 5;
             this.lblTamaño.Text = "Tamaño:";
             // 
@@ -138,20 +137,20 @@
             // 
             this.panelPreview.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(30)))));
             this.panelPreview.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panelPreview.Location = new System.Drawing.Point(240, 20);
+            this.panelPreview.Location = new System.Drawing.Point(206, 17);
             this.panelPreview.Name = "panelPreview";
-            this.panelPreview.Size = new System.Drawing.Size(140, 140);
+            this.panelPreview.Size = new System.Drawing.Size(120, 122);
             this.panelPreview.TabIndex = 6;
             this.panelPreview.Paint += new System.Windows.Forms.PaintEventHandler(this.PanelPreview_Paint);
             // 
             // FormAgregarFigura
             // 
             this.AcceptButton = this.btnAceptar;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
             this.CancelButton = this.btnCancelar;
-            this.ClientSize = new System.Drawing.Size(400, 300);
+            this.ClientSize = new System.Drawing.Size(343, 260);
             this.Controls.Add(this.panelPreview);
             this.Controls.Add(this.lblTamaño);
             this.Controls.Add(this.lblTipo);

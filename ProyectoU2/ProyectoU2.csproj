@@ -66,6 +66,9 @@
     <EmbeddedResource Include="Form3DViewer.resx">
       <DependentUpon>Form3DViewer.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormAgregarFigura.resx">
+      <DependentUpon>FormAgregarFigura.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
