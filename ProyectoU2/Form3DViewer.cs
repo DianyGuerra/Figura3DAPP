@@ -705,12 +705,6 @@ namespace Motor3D
 
         // Rotación
 
-        private static float Normalize360(float deg)
-        {
-            deg %= 360f;
-            if (deg < 0) deg += 360f;
-            return deg;
-        }
 
         private void trackBarRotX_Scroll(object sender, EventArgs e)
         {
