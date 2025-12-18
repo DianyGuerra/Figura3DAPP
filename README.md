@@ -74,4 +74,23 @@ La aplicación debe contar con una GUI que permita:
 https://github.com/DianyGuerra/Figura3DAPP.git
 
 
-# Dirección
+## Ejecutable (Windows)
+
+Para ejecutar la aplicación, abrir el archivo:
+
+- **Debug** (modo desarrollo):
+  `ProyectoU2\bin\Debug\ProyectoU2.exe`
+
+
+
+# Link del video en YouTube
+
+Mira una demo del programa y cómmo funciona:
+
+https://youtu.be/HqrDQd1hJe8
+
+
+# Link de la presentación
+
+https://www.canva.com/design/DAG707THOuU/kf2JEBtizeNAziLDMS0YPA/edit?utm_content=DAG707THOuU&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+
