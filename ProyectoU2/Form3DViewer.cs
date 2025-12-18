@@ -31,8 +31,6 @@ namespace Motor3D
         private bool modoWireframe = false;
 
         // Timer para animación/actualización
-        private Timer timerActualizacion;
-
         private Timer timerRender;
         private bool necesitaRender = true;
 
@@ -63,7 +61,7 @@ namespace Motor3D
             null,
             pictureBoxViewport,
             new object[] { true }
-        );
+            );
         }
 
         /// <summary>
@@ -108,13 +106,6 @@ namespace Motor3D
                     RenderizarEscena();
                 };
                 timerRender.Start();
-
-
-                /*timerActualizacion = new Timer();
-                timerActualizacion.Interval = 16; // ~60 FPS
-                timerActualizacion.Tick += TimerActualizacion_Tick;
-                timerActualizacion.Start();*/
-
 
                 // Actualizar UI
                 ActualizarListaFiguras();
@@ -338,7 +329,7 @@ namespace Motor3D
             int n = figura.Vertices.Count;
             if (n <= 0) return;
 
-            // Arrays reutilizables por llamada (evitamos LINQ, pero sin ArrayPool)
+            // Arrays reutilizables por llamada
             var vView = new Vector3D[n];
             var vClip = new Vector3D[n];
 
@@ -381,7 +372,7 @@ namespace Motor3D
 
                 if (iluminacionActiva)
                 {
-                    // Normal en WORLD (como antes)
+                    // Normal
                     var aw = matrizModelo.TransformarPunto(figura.Vertices[cara[0]]);
                     var bw = matrizModelo.TransformarPunto(figura.Vertices[cara[1]]);
                     var cw = matrizModelo.TransformarPunto(figura.Vertices[cara[2]]);
@@ -431,7 +422,6 @@ namespace Motor3D
                 }
                 else
                 {
-                    // Si alguna cara tiene >4 vértices, la omitimos (o habría que triangular)
                     continue;
                 }
             }
@@ -804,12 +794,6 @@ namespace Motor3D
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            if (timerActualizacion != null)
-            {
-                timerActualizacion.Stop();
-                timerActualizacion.Dispose();
-            }
-
             if (graphicsBuffer != null)
             {
                 graphicsBuffer.Dispose();
@@ -835,6 +819,7 @@ namespace Motor3D
             if (bufferRenderizado != null)
                 e.Graphics.DrawImageUnscaled(bufferRenderizado, 0, 0);
         }
+
 
     }
 }

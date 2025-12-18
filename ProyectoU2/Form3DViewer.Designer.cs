@@ -345,7 +345,7 @@
             this.groupBoxPropiedades.ForeColor = System.Drawing.Color.White;
             this.groupBoxPropiedades.Location = new System.Drawing.Point(0, 0);
             this.groupBoxPropiedades.Name = "groupBoxPropiedades";
-            this.groupBoxPropiedades.Padding = new System.Windows.Forms.Padding(9, 9, 9, 9);
+            this.groupBoxPropiedades.Padding = new System.Windows.Forms.Padding(9);
             this.groupBoxPropiedades.Size = new System.Drawing.Size(214, 607);
             this.groupBoxPropiedades.TabIndex = 0;
             this.groupBoxPropiedades.TabStop = false;
@@ -429,34 +429,46 @@
             this.lblPosY.Name = "lblPosY";
             this.lblPosY.Size = new System.Drawing.Size(26, 17);
             this.lblPosY.TabIndex = 7;
+            this.lblPosY.Text = "Y:";
             // 
             // numericPosX
             // 
-            this.numericPosX.Location = new System.Drawing.Point(0, 0);
+            this.numericPosX.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.numericPosX.DecimalPlaces = 2;
+            this.numericPosX.ForeColor = System.Drawing.Color.White;
+            this.numericPosX.Location = new System.Drawing.Point(39, 40);
+            this.numericPosX.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            -2147483648});
             this.numericPosX.Name = "numericPosX";
-            this.numericPosX.Size = new System.Drawing.Size(103, 20);
+            this.numericPosX.Size = new System.Drawing.Size(141, 20);
             this.numericPosX.TabIndex = 8;
+            this.numericPosX.ValueChanged += new System.EventHandler(this.numericPosX_ValueChanged);
             // 
             // lblPosX
             // 
-            this.lblPosX.Location = new System.Drawing.Point(0, 0);
+            this.lblPosX.Location = new System.Drawing.Point(9, 42);
             this.lblPosX.Name = "lblPosX";
             this.lblPosX.Size = new System.Drawing.Size(86, 20);
             this.lblPosX.TabIndex = 9;
+            this.lblPosX.Text = "X:";
             // 
             // lblPosicion
             // 
-            this.lblPosicion.Location = new System.Drawing.Point(0, 0);
+            this.lblPosicion.Location = new System.Drawing.Point(9, 71);
             this.lblPosicion.Name = "lblPosicion";
             this.lblPosicion.Size = new System.Drawing.Size(86, 20);
             this.lblPosicion.TabIndex = 10;
+            this.lblPosicion.Text = "Y:";
             // 
             // tabPageRotacion
             // 
             this.tabPageRotacion.Location = new System.Drawing.Point(4, 22);
             this.tabPageRotacion.Name = "tabPageRotacion";
             this.tabPageRotacion.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageRotacion.Size = new System.Drawing.Size(189, 552);
+            this.tabPageRotacion.Size = new System.Drawing.Size(188, 550);
             this.tabPageRotacion.TabIndex = 1;
             this.tabPageRotacion.Text = "Rotación";
             // 
@@ -473,7 +485,7 @@
             this.tabPageEscala.Location = new System.Drawing.Point(4, 22);
             this.tabPageEscala.Name = "tabPageEscala";
             this.tabPageEscala.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageEscala.Size = new System.Drawing.Size(189, 552);
+            this.tabPageEscala.Size = new System.Drawing.Size(188, 550);
             this.tabPageEscala.TabIndex = 2;
             this.tabPageEscala.Text = "Escala";
             // 
@@ -614,7 +626,7 @@
             this.tabPageColor.Location = new System.Drawing.Point(4, 22);
             this.tabPageColor.Name = "tabPageColor";
             this.tabPageColor.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageColor.Size = new System.Drawing.Size(189, 552);
+            this.tabPageColor.Size = new System.Drawing.Size(188, 550);
             this.tabPageColor.TabIndex = 3;
             this.tabPageColor.Text = "Color";
             // 
@@ -742,7 +754,5 @@
             this.ResumeLayout(false);
 
         }
-
-
     }
 }
