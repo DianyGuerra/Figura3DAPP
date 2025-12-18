@@ -31,13 +31,6 @@
         private System.Windows.Forms.Label lblPosZ;
         private System.Windows.Forms.NumericUpDown numericPosZ;
         private System.Windows.Forms.TabPage tabPageRotacion;
-        private System.Windows.Forms.Label lblRotacion;
-        private System.Windows.Forms.Label lblRotX;
-        private System.Windows.Forms.TrackBar trackBarRotX;
-        private System.Windows.Forms.Label lblRotY;
-        private System.Windows.Forms.TrackBar trackBarRotY;
-        private System.Windows.Forms.Label lblRotZ;
-        private System.Windows.Forms.TrackBar trackBarRotZ;
         private System.Windows.Forms.TabPage tabPageEscala;
         private System.Windows.Forms.Label lblEscala;
         private System.Windows.Forms.Label lblEscalaX;
@@ -100,13 +93,12 @@
             this.tabPageColor = new System.Windows.Forms.TabPage();
             this.lblColor = new System.Windows.Forms.Label();
             this.btnColor = new System.Windows.Forms.Button();
-            this.trackBarRotZ = new System.Windows.Forms.TrackBar();
-            this.lblRotZ = new System.Windows.Forms.Label();
-            this.trackBarRotY = new System.Windows.Forms.TrackBar();
-            this.lblRotY = new System.Windows.Forms.Label();
             this.trackBarRotX = new System.Windows.Forms.TrackBar();
+            this.trackBarRotY = new System.Windows.Forms.TrackBar();
+            this.trackBarRotZ = new System.Windows.Forms.TrackBar();
             this.lblRotX = new System.Windows.Forms.Label();
-            this.lblRotacion = new System.Windows.Forms.Label();
+            this.lblRotY = new System.Windows.Forms.Label();
+            this.lblRotZ = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxViewport)).BeginInit();
             this.panelIzquierdo.SuspendLayout();
             this.groupBoxOpciones.SuspendLayout();
@@ -119,14 +111,15 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericPosZ)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericPosY)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericPosX)).BeginInit();
+            this.tabPageRotacion.SuspendLayout();
             this.tabPageEscala.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericEscalaX)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericEscalaY)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericEscalaZ)).BeginInit();
             this.tabPageColor.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.trackBarRotZ)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.trackBarRotY)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarRotX)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBarRotY)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBarRotZ)).BeginInit();
             this.SuspendLayout();
             // 
             // pictureBoxViewport
@@ -465,6 +458,13 @@
             // 
             // tabPageRotacion
             // 
+            this.tabPageRotacion.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.tabPageRotacion.Controls.Add(this.lblRotZ);
+            this.tabPageRotacion.Controls.Add(this.lblRotY);
+            this.tabPageRotacion.Controls.Add(this.lblRotX);
+            this.tabPageRotacion.Controls.Add(this.trackBarRotZ);
+            this.tabPageRotacion.Controls.Add(this.trackBarRotY);
+            this.tabPageRotacion.Controls.Add(this.trackBarRotX);
             this.tabPageRotacion.Location = new System.Drawing.Point(4, 22);
             this.tabPageRotacion.Name = "tabPageRotacion";
             this.tabPageRotacion.Padding = new System.Windows.Forms.Padding(3);
@@ -651,74 +651,68 @@
             this.btnColor.UseVisualStyleBackColor = false;
             this.btnColor.Click += new System.EventHandler(this.btnColor_Click);
             // 
-            // trackBarRotZ
+            // trackBarRotX
             // 
-            this.trackBarRotZ.Location = new System.Drawing.Point(10, 214);
-            this.trackBarRotZ.Maximum = 360;
-            this.trackBarRotZ.Minimum = -360;
-            this.trackBarRotZ.Name = "trackBarRotZ";
-            this.trackBarRotZ.Size = new System.Drawing.Size(200, 50);
-            this.trackBarRotZ.TabIndex = 6;
-            this.trackBarRotZ.TickFrequency = 45;
-            this.trackBarRotZ.Scroll += new System.EventHandler(this.trackBarRotZ_Scroll);
-            // 
-            // lblRotZ
-            // 
-            this.lblRotZ.ForeColor = System.Drawing.Color.White;
-            this.lblRotZ.Location = new System.Drawing.Point(10, 191);
-            this.lblRotZ.Name = "lblRotZ";
-            this.lblRotZ.Size = new System.Drawing.Size(200, 20);
-            this.lblRotZ.TabIndex = 5;
-            this.lblRotZ.Text = "Z: 0°";
+            this.trackBarRotX.LargeChange = 10;
+            this.trackBarRotX.Location = new System.Drawing.Point(7, 62);
+            this.trackBarRotX.Maximum = 180;
+            this.trackBarRotX.Minimum = -180;
+            this.trackBarRotX.Name = "trackBarRotX";
+            this.trackBarRotX.Size = new System.Drawing.Size(175, 50);
+            this.trackBarRotX.TabIndex = 0;
+            this.trackBarRotX.TickFrequency = 10;
+            this.trackBarRotX.Scroll += new System.EventHandler(this.trackBarRotX_Scroll);
             // 
             // trackBarRotY
             // 
-            this.trackBarRotY.Location = new System.Drawing.Point(10, 141);
-            this.trackBarRotY.Maximum = 360;
-            this.trackBarRotY.Minimum = -360;
+            this.trackBarRotY.LargeChange = 10;
+            this.trackBarRotY.Location = new System.Drawing.Point(7, 144);
+            this.trackBarRotY.Maximum = 180;
+            this.trackBarRotY.Minimum = -180;
             this.trackBarRotY.Name = "trackBarRotY";
-            this.trackBarRotY.Size = new System.Drawing.Size(200, 50);
-            this.trackBarRotY.TabIndex = 4;
-            this.trackBarRotY.TickFrequency = 45;
+            this.trackBarRotY.Size = new System.Drawing.Size(175, 50);
+            this.trackBarRotY.TabIndex = 1;
+            this.trackBarRotY.TickFrequency = 10;
             this.trackBarRotY.Scroll += new System.EventHandler(this.trackBarRotY_Scroll);
             // 
-            // lblRotY
+            // trackBarRotZ
             // 
-            this.lblRotY.ForeColor = System.Drawing.Color.White;
-            this.lblRotY.Location = new System.Drawing.Point(10, 118);
-            this.lblRotY.Name = "lblRotY";
-            this.lblRotY.Size = new System.Drawing.Size(200, 20);
-            this.lblRotY.TabIndex = 3;
-            this.lblRotY.Text = "Y: 0°";
-            // 
-            // trackBarRotX
-            // 
-            this.trackBarRotX.Location = new System.Drawing.Point(10, 68);
-            this.trackBarRotX.Maximum = 360;
-            this.trackBarRotX.Minimum = -360;
-            this.trackBarRotX.Name = "trackBarRotX";
-            this.trackBarRotX.Size = new System.Drawing.Size(200, 50);
-            this.trackBarRotX.TabIndex = 2;
-            this.trackBarRotX.TickFrequency = 45;
-            this.trackBarRotX.Scroll += new System.EventHandler(this.trackBarRotX_Scroll);
+            this.trackBarRotZ.LargeChange = 10;
+            this.trackBarRotZ.Location = new System.Drawing.Point(7, 226);
+            this.trackBarRotZ.Maximum = 180;
+            this.trackBarRotZ.Minimum = -180;
+            this.trackBarRotZ.Name = "trackBarRotZ";
+            this.trackBarRotZ.Size = new System.Drawing.Size(175, 50);
+            this.trackBarRotZ.TabIndex = 2;
+            this.trackBarRotZ.TickFrequency = 10;
+            this.trackBarRotZ.Scroll += new System.EventHandler(this.trackBarRotZ_Scroll);
             // 
             // lblRotX
             // 
-            this.lblRotX.ForeColor = System.Drawing.Color.White;
-            this.lblRotX.Location = new System.Drawing.Point(10, 45);
+            this.lblRotX.AutoSize = true;
+            this.lblRotX.Location = new System.Drawing.Point(10, 35);
             this.lblRotX.Name = "lblRotX";
-            this.lblRotX.Size = new System.Drawing.Size(200, 20);
-            this.lblRotX.TabIndex = 1;
-            this.lblRotX.Text = "X: 0°";
+            this.lblRotX.Size = new System.Drawing.Size(17, 13);
+            this.lblRotX.TabIndex = 3;
+            this.lblRotX.Text = "X:";
             // 
-            // lblRotacion
+            // lblRotY
             // 
-            this.lblRotacion.ForeColor = System.Drawing.Color.White;
-            this.lblRotacion.Location = new System.Drawing.Point(10, 15);
-            this.lblRotacion.Name = "lblRotacion";
-            this.lblRotacion.Size = new System.Drawing.Size(200, 20);
-            this.lblRotacion.TabIndex = 0;
-            this.lblRotacion.Text = "Rotación (X, Y, Z):";
+            this.lblRotY.AutoSize = true;
+            this.lblRotY.Location = new System.Drawing.Point(10, 115);
+            this.lblRotY.Name = "lblRotY";
+            this.lblRotY.Size = new System.Drawing.Size(17, 13);
+            this.lblRotY.TabIndex = 4;
+            this.lblRotY.Text = "Y:";
+            // 
+            // lblRotZ
+            // 
+            this.lblRotZ.AutoSize = true;
+            this.lblRotZ.Location = new System.Drawing.Point(10, 197);
+            this.lblRotZ.Name = "lblRotZ";
+            this.lblRotZ.Size = new System.Drawing.Size(17, 13);
+            this.lblRotZ.TabIndex = 5;
+            this.lblRotZ.Text = "Z:";
             // 
             // Form3DViewer
             // 
@@ -743,16 +737,25 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericPosZ)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericPosY)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericPosX)).EndInit();
+            this.tabPageRotacion.ResumeLayout(false);
+            this.tabPageRotacion.PerformLayout();
             this.tabPageEscala.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.numericEscalaX)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericEscalaY)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericEscalaZ)).EndInit();
             this.tabPageColor.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.trackBarRotZ)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.trackBarRotY)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarRotX)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBarRotY)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBarRotZ)).EndInit();
             this.ResumeLayout(false);
 
         }
+
+        private System.Windows.Forms.TrackBar trackBarRotZ;
+        private System.Windows.Forms.TrackBar trackBarRotY;
+        private System.Windows.Forms.TrackBar trackBarRotX;
+        private System.Windows.Forms.Label lblRotZ;
+        private System.Windows.Forms.Label lblRotY;
+        private System.Windows.Forms.Label lblRotX;
     }
 }

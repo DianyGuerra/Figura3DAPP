@@ -629,28 +629,55 @@ namespace Motor3D
             SolicitarRender();
         }
 
+        // Rotación
+
+        private static float Normalize360(float deg)
+        {
+            deg %= 360f;
+            if (deg < 0) deg += 360f;
+            return deg;
+        }
+
         private void trackBarRotX_Scroll(object sender, EventArgs e)
         {
             if (figuraSeleccionada == null) return;
-            figuraSeleccionada.Rotacion = new Vector3D(trackBarRotX.Value, figuraSeleccionada.Rotacion.Y, figuraSeleccionada.Rotacion.Z);
-            lblRotX.Text = $"X: {trackBarRotX.Value}°";
+
+            float x = Normalize360(trackBarRotX.Value);
+
+            figuraSeleccionada.Rotacion = new Vector3D(x,
+                figuraSeleccionada.Rotacion.Y,
+                figuraSeleccionada.Rotacion.Z);
+
+            lblRotX.Text = $"X: {(int)x}°";
             SolicitarRender();
         }
+
 
         private void trackBarRotY_Scroll(object sender, EventArgs e)
         {
             if (figuraSeleccionada == null) return;
-            figuraSeleccionada.Rotacion = new Vector3D(figuraSeleccionada.Rotacion.X, trackBarRotY.Value, figuraSeleccionada.Rotacion.Z);
-            lblRotY.Text = $"Y: {trackBarRotY.Value}°";
+
+            float y = Normalize360(trackBarRotY.Value);
+
+            figuraSeleccionada.Rotacion = new Vector3D(figuraSeleccionada.Rotacion.X,y,
+                figuraSeleccionada.Rotacion.Z);
+
+            lblRotY.Text = $"Y: {(int)y}°";
             SolicitarRender();
         }
 
         private void trackBarRotZ_Scroll(object sender, EventArgs e)
         {
             if (figuraSeleccionada == null) return;
-            figuraSeleccionada.Rotacion = new Vector3D(figuraSeleccionada.Rotacion.X, figuraSeleccionada.Rotacion.Y, trackBarRotZ.Value);
-            lblRotZ.Text = $"Z: {trackBarRotZ.Value}°";
-            SolicitarRender();
+
+            float z = Normalize360(trackBarRotZ.Value);
+
+            figuraSeleccionada.Rotacion = new Vector3D(figuraSeleccionada.Rotacion.X,
+                figuraSeleccionada.Rotacion.Y,
+                z);
+
+            lblRotZ.Text = $"Z: {(int)z}°";
+            SolicitarRender();  
         }
 
         private void numericEscalaX_ValueChanged(object sender, EventArgs e)
@@ -819,7 +846,5 @@ namespace Motor3D
             if (bufferRenderizado != null)
                 e.Graphics.DrawImageUnscaled(bufferRenderizado, 0, 0);
         }
-
-
     }
 }
