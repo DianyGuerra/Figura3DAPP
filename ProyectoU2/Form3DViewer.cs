@@ -40,6 +40,8 @@ namespace Motor3D
         private readonly PointF[] _tmp3 = new PointF[3];
         private readonly PointF[] _tmp4 = new PointF[4];
 
+        private readonly HashSet<Keys> _keys = new HashSet<Keys>();
+        private bool _look = false;
 
         private struct FaceKey
         {
@@ -62,6 +64,11 @@ namespace Motor3D
             pictureBoxViewport,
             new object[] { true }
             );
+
+            this.KeyPreview = true;
+            this.KeyDown += Form3DViewer_KeyDown;
+            this.KeyUp += Form3DViewer_KeyUp;
+
         }
 
         /// <summary>
@@ -101,6 +108,10 @@ namespace Motor3D
                 timerRender.Interval = 16; // 60fps máx
                 timerRender.Tick += (s, e) =>
                 {
+                    bool huboMovimiento = ProcesarMovimientoLibre();
+
+                    if (huboMovimiento) necesitaRender = true;
+
                     if (!necesitaRender) return;
                     necesitaRender = false;
                     RenderizarEscena();
@@ -566,6 +577,69 @@ namespace Motor3D
             return p;
         }
 
+        // Método para procesar el movimiento de la cámara en modo libre
+        private bool ProcesarMovimientoLibre()
+        {
+            if (camara == null || camara.Modo != Camara3D.ModoCamara.Libre) return false;
+
+            float speed = 0.08f;
+            if (_keys.Contains(Keys.ShiftKey)) speed *= 2.0f;
+
+            float adelante = 0, derecha = 0, arriba = 0;
+
+            if (_keys.Contains(Keys.W)) adelante += speed;
+            if (_keys.Contains(Keys.S)) adelante -= speed;
+
+            if (_keys.Contains(Keys.D)) derecha += speed;
+            if (_keys.Contains(Keys.A)) derecha -= speed;
+
+            if (_keys.Contains(Keys.E)) arriba += speed;
+            if (_keys.Contains(Keys.Q)) arriba -= speed;
+
+            if (adelante != 0 || derecha != 0 || arriba != 0)
+            {
+                camara.MoverLibre(adelante, derecha, arriba);
+                return true;
+            }
+
+            return false;
+        }
+
+        private void ActualizarAyudaCamara()
+        {
+            if (lblAyudaCamara == null || camara == null) return;
+
+            switch (camara.Modo)
+            {
+                case Camara3D.ModoCamara.Orbital:
+                    lblAyudaCamara.Text =
+                        "CÁMARA ORBITAL\n" +
+                        "- Arrastrar (Click IZQ + mover): rotar alrededor del objetivo\n" +
+                        "- Rueda del mouse: zoom (acercar/alejar)\n" +
+                        "- Reiniciar: vuelve a la vista por defecto";
+                    break;
+
+                case Camara3D.ModoCamara.Libre:
+                    lblAyudaCamara.Text =
+                        "CÁMARA LIBRE (FPS)\n" +
+                        "- Click DER + arrastrar: mirar\n" +
+                        "- W/S: adelante/atrás | A/D: izquierda/derecha\n" +
+                        "- Q/E: bajar/subir | Shift: más rápido\n" +
+                        "- Reiniciar: vuelve a la vista por defecto";
+                    break;
+
+                case Camara3D.ModoCamara.Fija:
+                default:
+                    lblAyudaCamara.Text =
+                        "CÁMARA FIJA\n" +
+                        "- No se mueve con mouse/teclas\n" +
+                        "- Manipula las figuras con traslación/rotación/escala\n" +
+                        "- Reiniciar: vuelve a la vista por defecto";
+                    break;
+            }
+        }
+
+
 
         // EVENTOS DE UI
 
@@ -706,60 +780,66 @@ namespace Motor3D
         {
             ultimoMousePos = e.Location;
 
-            if (e.Button == MouseButtons.Left)
+            if (camara == null) return;
+
+            if (camara.Modo == Camara3D.ModoCamara.Orbital && e.Button == MouseButtons.Left)
             {
                 arrastrando = true;
-
-                // Más fluido mientras arrastras
-                if (graphicsBuffer != null)
-                    graphicsBuffer.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
-
-                // Opcional: fuerza wireframe temporal mientras arrastras (si quieres aún más fluido)
-                // modoWireframe = true;
-
-                // Para que el PictureBox reciba la rueda/teclas y no "pierda" el focus
                 pictureBoxViewport.Focus();
-
                 SolicitarRender();
+                return;
+            }
+
+            if (camara.Modo == Camara3D.ModoCamara.Libre && e.Button == MouseButtons.Right)
+            {
+                _look = true;
+                pictureBoxViewport.Focus();
+                SolicitarRender();
+                return;
             }
         }
+
 
 
         private void pictureBoxViewport_MouseMove(object sender, MouseEventArgs e)
         {
-            if (!arrastrando) return;
-
-            float deltaX = e.X - ultimoMousePos.X;
-            float deltaY = e.Y - ultimoMousePos.Y;
+            float dx = e.X - ultimoMousePos.X;
+            float dy = e.Y - ultimoMousePos.Y;
             ultimoMousePos = e.Location;
 
             if (camara == null) return;
 
-            if (camara.Modo == Camara3D.ModoCamara.Orbital)
+            if (camara.Modo == Camara3D.ModoCamara.Orbital && arrastrando)
             {
-                camara.RotarOrbital(deltaX * 0.5f, deltaY * 0.5f);
+                camara.RotarOrbital(dx * 0.5f, dy * 0.5f);
                 SolicitarRender();
+                return;
             }
-            else if (camara.Modo == Camara3D.ModoCamara.Libre)
+
+            if (camara.Modo == Camara3D.ModoCamara.Libre && _look)
             {
+                // dy negativo para que “arriba” mire arriba
+                camara.RotarLibre(dx * camara.SensMouse, -dy * camara.SensMouse);
                 SolicitarRender();
+                return;
             }
         }
+
 
 
         private void pictureBoxViewport_MouseUp(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
-            {
+            if (camara == null) return;
+
+            if (camara.Modo == Camara3D.ModoCamara.Orbital && e.Button == MouseButtons.Left)
                 arrastrando = false;
 
-                // Restaurar calidad al soltar
-                if (graphicsBuffer != null)
-                    graphicsBuffer.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            if (camara.Modo == Camara3D.ModoCamara.Libre && e.Button == MouseButtons.Right)
+                _look = false;
 
-                SolicitarRender();
-            }
+            SolicitarRender();
         }
+
 
 
         private void pictureBoxViewport_MouseWheel(object sender, MouseEventArgs e)
@@ -776,6 +856,7 @@ namespace Motor3D
         {
             camara.CambiarModo(Camara3D.ModoCamara.Orbital);
             ActualizarInfoCamara();
+            ActualizarAyudaCamara();
             SolicitarRender();
         }
 
@@ -783,6 +864,7 @@ namespace Motor3D
         {
             camara.CambiarModo(Camara3D.ModoCamara.Libre);
             ActualizarInfoCamara();
+            ActualizarAyudaCamara();
             SolicitarRender();
         }
 
@@ -790,6 +872,7 @@ namespace Motor3D
         {
             camara.CambiarModo(Camara3D.ModoCamara.Fija);
             ActualizarInfoCamara();
+            ActualizarAyudaCamara();
             SolicitarRender();
         }
 
@@ -846,5 +929,18 @@ namespace Motor3D
             if (bufferRenderizado != null)
                 e.Graphics.DrawImageUnscaled(bufferRenderizado, 0, 0);
         }
+
+        private void Form3DViewer_KeyDown(object sender, KeyEventArgs e)
+        {
+            _keys.Add(e.KeyCode);
+            SolicitarRender();
+        }
+
+        private void Form3DViewer_KeyUp(object sender, KeyEventArgs e)
+        {
+            _keys.Remove(e.KeyCode);
+            SolicitarRender();
+        }
+
     }
 }

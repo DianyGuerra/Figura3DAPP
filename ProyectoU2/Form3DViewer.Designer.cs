@@ -99,6 +99,7 @@
             this.lblRotX = new System.Windows.Forms.Label();
             this.lblRotY = new System.Windows.Forms.Label();
             this.lblRotZ = new System.Windows.Forms.Label();
+            this.lblAyudaCamara = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxViewport)).BeginInit();
             this.panelIzquierdo.SuspendLayout();
             this.groupBoxOpciones.SuspendLayout();
@@ -140,6 +141,7 @@
             // panelIzquierdo
             // 
             this.panelIzquierdo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.panelIzquierdo.Controls.Add(this.lblAyudaCamara);
             this.panelIzquierdo.Controls.Add(this.groupBoxOpciones);
             this.panelIzquierdo.Controls.Add(this.groupBoxCamara);
             this.panelIzquierdo.Controls.Add(this.groupBoxFiguras);
@@ -714,6 +716,15 @@
             this.lblRotZ.TabIndex = 5;
             this.lblRotZ.Text = "Z:";
             // 
+            // lblAyudaCamara
+            // 
+            this.lblAyudaCamara.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lblAyudaCamara.ForeColor = System.Drawing.Color.White;
+            this.lblAyudaCamara.Location = new System.Drawing.Point(10, 565);
+            this.lblAyudaCamara.Name = "lblAyudaCamara";
+            this.lblAyudaCamara.Size = new System.Drawing.Size(194, 200);
+            this.lblAyudaCamara.TabIndex = 3;
+            // 
             // Form3DViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -724,6 +735,8 @@
             this.Controls.Add(this.panelIzquierdo);
             this.Name = "Form3DViewer";
             this.Text = "Motor 3D - Visor Interactivo";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form3DViewer_KeyDown);
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Form3DViewer_KeyUp);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxViewport)).EndInit();
             this.panelIzquierdo.ResumeLayout(false);
             this.groupBoxOpciones.ResumeLayout(false);
@@ -757,5 +770,6 @@
         private System.Windows.Forms.Label lblRotZ;
         private System.Windows.Forms.Label lblRotY;
         private System.Windows.Forms.Label lblRotX;
+        private System.Windows.Forms.Label lblAyudaCamara;
     }
 }

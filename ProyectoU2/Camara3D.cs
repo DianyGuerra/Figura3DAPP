@@ -31,6 +31,12 @@ namespace Motor3D
         public float PlanoConjunto { get; set; }
         public float PlanoLejano { get; set; }
 
+        //Parametros de la camara libre
+        public float Desviacion { get; private set; } = 90f;     // 90 para mirar hacia +Z (ajusta si quieres)
+        public float Tono { get; private set; } = 0f;
+        public float SensMouse { get; set; } = 0.25f;     // sensibilidad mouse
+
+
         public Camara3D()
         {
             // Inicialización por defecto
@@ -110,41 +116,32 @@ namespace Motor3D
         {
             if (Modo != ModoCamara.Libre) return;
 
-            // Calcular vectores de dirección
-            Vector3D direccion = (Objetivo - Posicion).Normalizar();
-            Vector3D lateral = Vector3D.ProductoCruz(direccion, Arriba).Normalizar();
-            Vector3D vertical = Vector3D.ProductoCruz(lateral, direccion).Normalizar();
+            var f = Forward;
+            var r = Right;
+            var u = Up; // si quieres “volar” según la cámara
 
-            // Aplicar movimiento
-            Posicion = Posicion + direccion * adelante + lateral * derecha + vertical * arriba;
-            Objetivo = Objetivo + direccion * adelante + lateral * derecha + vertical * arriba;
+            Posicion = Posicion + f * adelante + r * derecha + u * arriba;
+            Objetivo = Objetivo + f * adelante + r * derecha + u * arriba;
         }
+
 
         /// <summary>
         /// Rota la cámara en modo libre.
         /// </summary>
-        public void RotarLibre(float horizontal, float vertical)
+        public void RotarLibre(float variacionDesviacion, float desviacionTono)
         {
             if (Modo != ModoCamara.Libre) return;
 
-            Vector3D direccion = (Objetivo - Posicion).Normalizar();
-            float distancia = (Objetivo - Posicion).Magnitud();
+            Desviacion += variacionDesviacion;
+            Tono += desviacionTono;
 
-            // Rotación horizontal
-            Matrix4x4 rotY = RotacionY(horizontal);
-            direccion = rotY.TransformarPunto(direccion);
+            // Normaliza la desviación para que no crezca infinito
+            if (Desviacion > 360f) Desviacion -= 360f;
+            if (Desviacion < 0f) Desviacion += 360f;
 
-            // Rotación vertical
-            Vector3D lateral = Vector3D.ProductoCruz(direccion, Arriba).Normalizar();
-            float radV = vertical * (float)Math.PI / 180f;
-            float cosV = (float)Math.Cos(radV);
-            float sinV = (float)Math.Sin(radV);
-
-            Vector3D nuevaDireccion = direccion * cosV + Arriba * sinV;
-            direccion = nuevaDireccion.Normalizar();
-
-            Objetivo = Posicion + direccion * distancia;
+            RecalcularLibre();
         }
+
 
         /// <summary>
         /// Obtiene la matriz de vista de la cámara.
@@ -181,7 +178,11 @@ namespace Motor3D
 
                 case ModoCamara.Libre:
                     Posicion = new Vector3D(0, 2, 5);
+                    Desviacion = 90f;
+                    Tono = 0f;
+                    RecalcularLibre();
                     break;
+
 
                 case ModoCamara.Fija:
                     Posicion = new Vector3D(0, 3, 8);
@@ -236,5 +237,44 @@ namespace Motor3D
 
             return info;
         }
+
+        private static float Deg2Rad(float d) => d * (float)Math.PI / 180f;
+
+        private void RecalcularLibre()
+        {
+            // Clamp pitch para no voltearse
+            Tono = Math.Max(-89f, Math.Min(89f, Tono));
+
+            float desviacionR = Deg2Rad(Desviacion);
+            float tonoR = Deg2Rad(Tono);
+
+            // Forward (convención típica)
+            var forward = new Vector3D(
+                (float)(Math.Cos(tonoR) * Math.Cos(desviacionR)),
+                (float)(Math.Sin(tonoR)),
+                (float)(Math.Cos(tonoR) * Math.Sin(desviacionR))
+            ).Normalizar();
+
+            var worldUp = new Vector3D(0, 1, 0);
+            var right = Vector3D.ProductoCruz(forward, worldUp).Normalizar();
+            var up = Vector3D.ProductoCruz(right, forward).Normalizar();
+
+            Arriba = up;
+            Objetivo = Posicion + forward;
+        }
+
+        public Vector3D Forward => (Objetivo - Posicion).Normalizar();
+
+        public Vector3D Right
+        {
+            get
+            {
+                var worldUp = new Vector3D(0, 1, 0);
+                return Vector3D.ProductoCruz(Forward, worldUp).Normalizar();
+            }
+        }
+
+        public Vector3D Up => Arriba.Normalizar();
+
     }
 }
