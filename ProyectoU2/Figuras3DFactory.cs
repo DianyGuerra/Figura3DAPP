@@ -176,42 +176,52 @@ namespace Motor3D
         /// </summary>
         public static Figura3D CrearCono(float radio = 0.5f, float altura = 2.0f, int segmentos = 20)
         {
+            if (segmentos < 6) segmentos = 6;
+
             var cono = new Figura3D { Nombre = "Cono", Color = Color.Yellow };
 
-            // Vértice superior (punta del cono)
-            int verticeApice = 0;
-            cono.Vertices.Add(new Vector3D(0, altura / 2f, 0));
+            float yTop = altura / 2f;
+            float yBase = -altura / 2f;
 
-            // Vértices de la base
+            // Ápice
+            int apex = 0;
+            cono.Vertices.Add(new Vector3D(0, yTop, 0));
+
+            // Aro de la base (1..segmentos)
             for (int i = 0; i < segmentos; i++)
             {
-                float angulo = 2 * (float)Math.PI * i / segmentos;
-                float x = radio * (float)Math.Cos(angulo);
-                float z = radio * (float)Math.Sin(angulo);
-                cono.Vertices.Add(new Vector3D(x, -altura / 2f, z));
+                float ang = 2f * (float)Math.PI * i / segmentos;
+                float x = radio * (float)Math.Cos(ang);
+                float z = radio * (float)Math.Sin(ang);
+                cono.Vertices.Add(new Vector3D(x, yBase, z));
             }
 
-            // Vértice central de la base
+            // Centro de la base
             int centroBase = cono.Vertices.Count;
-            cono.Vertices.Add(new Vector3D(0, -altura / 2f, 0));
+            cono.Vertices.Add(new Vector3D(0, yBase, 0));
 
-            // Caras laterales (triángulos)
+            // --- Caras laterales (triángulos) ---
+            // OJO: aquí el orden es CLAVE: apex -> actual -> siguiente
             for (int i = 0; i < segmentos; i++)
             {
-                int siguiente = (i % (segmentos - 1)) + 1;
-                if (i == segmentos - 1) siguiente = 1;
-                cono.Caras.Add(new int[] { verticeApice, siguiente, i + 1 });
+                int actual = 1 + i;
+                int siguiente = 1 + ((i + 1) % segmentos);
+                cono.Caras.Add(new[] { apex, actual, siguiente });
             }
 
-            // Base (triángulos desde el centro)
-            for (int i = 1; i <= segmentos; i++)
+            // --- Base (triángulos) ---
+            // Para que apunte hacia abajo (normal -Y), invertimos el orden: centro -> siguiente -> actual
+            for (int i = 0; i < segmentos; i++)
             {
-                int siguiente = (i % segmentos) + 1;
-                cono.Caras.Add(new int[] { centroBase, i, siguiente });
+                int actual = 1 + i;
+                int siguiente = 1 + ((i + 1) % segmentos);
+                cono.Caras.Add(new[] { centroBase, siguiente, actual });
             }
 
             return cono;
         }
+
+
 
         /// <summary>
         /// Crea una pirámide cuadrada.
@@ -246,48 +256,65 @@ namespace Motor3D
         /// <summary>
         /// Crea un toro (dona).
         /// </summary>
-        public static Figura3D CrearToro(float radioMayor = 1.0f, float radioMenor = 0.3f, int segmentos = 16, int lados = 12)
+        public static Figura3D CrearToroide(float radioMayor = 2.0f, float radioMenor = 0.6f, int segMayor = 24, int segMenor = 12)
         {
-            var toro = new Figura3D { Nombre = "Toro", Color = Color.Purple };
+            // Seguros mínimos (evita errores)
+            if (segMayor < 8) segMayor = 8;
+            if (segMenor < 6) segMenor = 6;
 
-            for (int i = 0; i < segmentos; i++)
+            var fig = new Figura3D
             {
-                float u = 2 * (float)Math.PI * i / segmentos;
-                float cosU = (float)Math.Cos(u);
-                float sinU = (float)Math.Sin(u);
+                Nombre = "Toroide",
+                Color = Color.DeepSkyBlue
+            };
 
-                for (int j = 0; j < lados; j++)
+            // Vértices
+            // Parametrización:
+            // theta: alrededor del “aro grande”
+            // phi  : alrededor del “tubo”
+            for (int i = 0; i < segMayor; i++)
+            {
+                float theta = (float)(2.0 * Math.PI * i / segMayor);
+                float cosT = (float)Math.Cos(theta);
+                float sinT = (float)Math.Sin(theta);
+
+                for (int j = 0; j < segMenor; j++)
                 {
-                    float v = 2 * (float)Math.PI * j / lados;
-                    float cosV = (float)Math.Cos(v);
-                    float sinV = (float)Math.Sin(v);
+                    float phi = (float)(2.0 * Math.PI * j / segMenor);
+                    float cosP = (float)Math.Cos(phi);
+                    float sinP = (float)Math.Sin(phi);
 
-                    float x = (radioMayor + radioMenor * cosV) * cosU;
-                    float y = radioMenor * sinV;
-                    float z = (radioMayor + radioMenor * cosV) * sinU;
+                    float x = (radioMayor + radioMenor * cosP) * cosT;
+                    float y = radioMenor * sinP;
+                    float z = (radioMayor + radioMenor * cosP) * sinT;
 
-                    toro.Vertices.Add(new Vector3D(x, y, z));
+                    fig.Vertices.Add(new Vector3D(x, y, z));
                 }
             }
 
-            // Crear caras
-            for (int i = 0; i < segmentos; i++)
+            // Caras (QUADS) con wrap
+            int Idx(int a, int b) => (a % segMayor) * segMenor + (b % segMenor);
+
+            for (int i = 0; i < segMayor; i++)
             {
-                int nextI = (i + 1) % segmentos;
-                for (int j = 0; j < lados; j++)
+                int inext = (i + 1) % segMayor;
+                for (int j = 0; j < segMenor; j++)
                 {
-                    int nextJ = (j + 1) % lados;
+                    int jnext = (j + 1) % segMenor;
 
-                    int v1 = i * lados + j;
-                    int v2 = nextI * lados + j;
-                    int v3 = nextI * lados + nextJ;
-                    int v4 = i * lados + nextJ;
+                    int a = Idx(i, j);
+                    int b = Idx(inext, j);
+                    int c = Idx(inext, jnext);
+                    int d = Idx(i, jnext);
 
-                    toro.Caras.Add(new int[] { v1, v2, v3, v4 });
+                    // Orden consistente (quad)
+                    fig.Caras.Add(new[] { a, d, c, b });
+
                 }
             }
 
-            return toro;
+            return fig;
         }
+
     }
 }
